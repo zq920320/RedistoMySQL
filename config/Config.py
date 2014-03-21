@@ -16,7 +16,15 @@ REDIS = {
     'db':0
 }
 
-
+'''
+	#Mysql配置地址
+	*	host: 填写MySQL服务器名称或者IP
+	*	user：填写MySQL用户名
+	*	password: 添加MySQL服务器的密码
+	*	port: 服务器端口，默认为3306
+	*	db: MySQL中配置的数据库编号，默认为test
+	*	charset：MySQl数据库用UTF-8
+'''
 MySQL={
 	'host':'localhost',
 	'password':'123456',

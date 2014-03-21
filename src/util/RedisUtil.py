@@ -1,7 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+import sys
+import os
+reload(sys)
+
+c_path = os.getcwd()
+base_path=c_path[:c_path.rfind("RedistoMySQL")]
+sys.path.append(base_path)
 import redis
-from config import Config
+from RedistoMySQL.config import Config
 
 REDIS = Config.REDIS
 pool = redis.ConnectionPool(
