@@ -48,7 +48,7 @@ MySQL={
 '''
 
 
-apps_total=20
+apps_total=400
 
 
 
@@ -72,7 +72,8 @@ redis_client = redis.Redis(connection_pool=pool)
 #通过category获取app信息，传入起始和终止数，返回一个list
 def get_app_info_bycategory(app_total):
     app_infos=[]
-    app_lists = redis_client.lrange('app::mostpopular',1,redis_client.llen('app::mostpopular'))
+    popular_app_num=redis_client.llen('app::mostpopular')
+    app_lists = redis_client.lrange('app::mostpopular',popular_app_num-app_total,popular_app_num)
     for app_list in app_lists:
         app_list=eval(app_list)
         app_id = redis_client.hget('app::index', app_list[0])

@@ -31,7 +31,7 @@ REDIS = {
 
 
 apps_total=2000
-level=20
+level=6
 
 
 
@@ -43,18 +43,14 @@ level=20
 pool = redis.ConnectionPool(host=REDIS['host'], password=REDIS['password'], port=REDIS['port'], db=REDIS['db'])
 redis_client = redis.Redis(connection_pool=pool)
 #通过category获取app信息，传入起始和终止数，返回一个list
-def get_app_info_bycategory(app_total):
-    all_app_num=int(redis_client.get('app::amount'))
+def get_app_info_bycategory(part_start_app_num,part_end_app_num,app_total):
+    
+    #app_lists = redis_client.lrange('app::data',35,2000)
+    app_lists = redis_client.lrange('app::data',part_start_app_num,part_end_app_num)
     app_infos=[]
-    for i in range(1):
-        part_start_app_num=(all_app_num/100)*(i+1)
-        part_end_app_num=(all_app_num/100)*(i+2)
-        #app_lists = redis_client.lrange('app::data',35,2000)
-        app_lists = redis_client.lrange('app::data',part_start_app_num,part_end_app_num)
-        
-        for app in app_lists:
-            app = eval(app)
-
+    for app in app_lists:
+        app = eval(app)
+        if len(app)==6:
             #通过sort对category重新排序，将app_type存成分类数最大的分类+分类数的和，方便在最后的排序
             
             app_type=app['category'].encode('utf8', 'ignore')
@@ -68,6 +64,8 @@ def get_app_info_bycategory(app_total):
             if num>=level:
                 app_type=app_type[0].split(':')[0]+':'+str(num)
                 flag=True
+            if len(app['app_detail'])==1 and app['app_detail'][0]['platform']=='googleplay':
+                flag=False
             if flag==True:
             
 
@@ -80,31 +78,38 @@ def get_app_info_bycategory(app_total):
                 #下载app_icon_file
                 #CommonUtil.download_icon(cover,app_name)
             flag=False
+    
         
-        
-    if len(app_infos)>=app_total:
-        #对app_info排序
-        app_infos.sort(key=lambda x:int(x[1].split(':')[1]))
-        app_infos=app_infos[-(app_total):]
+    
    
    
     return app_infos
 
 
-def save_apps(app_infos):
-    redis_client.delete('app::mostpopular')
-    
-    for i in range(len(app_infos)):
-        redis_client.rpush('app::mostpopular',i)
-        redis_client.lset('app::mostpopular',i,app_infos[i])
-        
-   
+
 
 #数据迁移
 def save_2000apps(app_total=apps_total):
-    app_infos=get_app_info_bycategory(app_total)
+    all_app_num=int(redis_client.get('app::amount'))
+    redis_client.delete('app::mostpopular')
+    app_num=0
+    get_app_info=[]
+    for i in range(100):
+        print i
+        
+        part_start_app_num=(all_app_num/100)*(i)
+        part_end_app_num=(all_app_num/100)*(i+1)
+        app_infos=get_app_info_bycategory(part_start_app_num,part_end_app_num,app_total)
+        get_app_info+=app_infos
+        app_num+=len(app_infos)
     
-    save_apps(app_infos)
+    get_app_info.sort(key=lambda x:int(x[1].split(':')[1]))
+    for i in range(len(get_app_info)):
+        redis_client.rpush('app::mostpopular',i)
+        redis_client.lset('app::mostpopular',i,get_app_info[i])
+    
+    
+    
 
 
 
